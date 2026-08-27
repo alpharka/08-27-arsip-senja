@@ -16,3 +16,11 @@
 - [x] Menambahkan kontrol play/pause dengan indikator animasi.
 - [x] Memvalidasi TypeScript, build, dan tampilan mobile.
 - [ ] Menyimpan checkpoint revisi terbaru.
+
+## Revisi Navigasi Mobile
+
+- [x] Menghilangkan hamburger menu pada mobile.
+- [x] Menambahkan navigasi sticky di bagian bawah layar.
+- [x] Menyesuaikan spacing konten agar tidak tertutup sticky bar.
+- [x] Menguji mobile dan desktop.
+- [ ] Menyimpan checkpoint revisi terbaru.

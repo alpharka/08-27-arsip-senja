@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CalendarDays, Check, ChevronDown, Clock3, Copy, Gift, Heart, MapPin, Menu, Music2, Navigation, Send, X } from "lucide-react";
+import { CalendarDays, Check, ChevronDown, Clock3, Copy, Gift, Heart, Images, MapPin, Menu, MessageCircle, Music2, Navigation, Send, X } from "lucide-react";
 import { toast } from "sonner";
 
 /* Arsip Senja: editorial romanticism, warm tactile surfaces, asymmetrical spreads, gentle human pacing. */
@@ -73,6 +73,7 @@ export default function Home() {
         </nav>
         <button className={playing ? "music-toggle playing" : "music-toggle"} onClick={toggleMusic} aria-label={playing ? "Jeda musik" : "Putar musik"} title={playing ? "Jeda musik" : "Putar musik"}><Music2 size={17} /><span className="music-pulse" /></button>
       </header>
+      <nav className="bottom-nav" aria-label="Navigasi undangan mobile"><button onClick={() => scrollTo("home")}><Heart size={16} /><span>Atas</span></button><button onClick={() => scrollTo("event")}><CalendarDays size={16} /><span>Acara</span></button><button onClick={() => scrollTo("gallery")}><Images size={16} /><span>Galeri</span></button><button onClick={() => scrollTo("rsvp")}><MessageCircle size={16} /><span>RSVP</span></button></nav>
 
       <main id="home">
         <section className="hero-section">
