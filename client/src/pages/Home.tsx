@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDays, Check, ChevronDown, Clock3, Copy, Gift, Heart, MapPin, Menu, Music2, Navigation, Send, X } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,17 +30,21 @@ export default function Home() {
   const [opened, setOpened] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const [messageLength, setMessageLength] = useState(0);
+  const audioRef = useRef<HTMLAudioElement>(null);
   const [wishes, setWishes] = useState<Wish[]>(() => { try { return JSON.parse(localStorage.getItem("adinda-raka-wishes") || "[]"); } catch { return []; } });
   const [guestName, setGuestName] = useState("Bapak / Ibu / Saudara/i");
   const [copied, setCopied] = useState(false);
   const countdown = useCountdown("2027-02-14T16:00:00+07:00");
   const dateLabel = useMemo(() => new Intl.DateTimeFormat("id-ID", { dateStyle: "full" }).format(new Date("2027-02-14T16:00:00+07:00")), []);
   useEffect(() => { const raw = new URLSearchParams(window.location.search).get("to")?.trim(); if (raw) setGuestName(raw.replace(/\+/g, " ")); }, []);
+  useEffect(() => { if (!opened || !audioRef.current) return; audioRef.current.volume = .28; audioRef.current.play().then(() => setPlaying(true)).catch(() => setPlaying(false)); }, [opened]);
   useEffect(() => { localStorage.setItem("adinda-raka-wishes", JSON.stringify(wishes)); }, [wishes]);
   useEffect(() => { const nodes = document.querySelectorAll<HTMLElement>("[data-reveal]"); const observer = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) { entry.target.classList.add("is-visible"); observer.unobserve(entry.target); } }), { threshold: .12, rootMargin: "0px 0px -35px 0px" }); nodes.forEach((node) => observer.observe(node)); return () => observer.disconnect(); }, [opened, wishes.length]);
 
   const scrollTo = (id: string) => { setMenuOpen(false); document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }); };
   const copyAccount = async () => { await navigator.clipboard?.writeText("1234 5678 90"); setCopied(true); toast.success("Nomor rekening berhasil disalin"); window.setTimeout(() => setCopied(false), 2200); };
+  const toggleMusic = async () => { if (!audioRef.current) return; if (playing) { audioRef.current.pause(); setPlaying(false); } else { try { await audioRef.current.play(); setPlaying(true); } catch { toast.info("Ketuk sekali lagi untuk menyalakan musik"); } } };
 
   if (!opened) return (
     <main className="cover-screen">
@@ -60,14 +64,14 @@ export default function Home() {
   );
 
   return (
-    <div className="site-shell">
+    <div className="site-shell"><audio ref={audioRef} src="/manus-storage/arsip-senja-ambient_f76d1b79.mp3" loop preload="auto" aria-label="Musik latar undangan" />
       <header className="site-nav">
         <button className="nav-brand" onClick={() => scrollTo("home")} aria-label="Kembali ke atas"><img className="brand-mark" src="/manus-storage/brand-mark_b7be897b.png" alt="" /><span>Adinda <i>&</i> Raka</span></button>
         <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Buka menu">{menuOpen ? <X size={20} /> : <Menu size={20} />}</button>
         <nav className={menuOpen ? "nav-links open" : "nav-links"}>
           <button onClick={() => scrollTo("story")}>Cerita</button><button onClick={() => scrollTo("event")}>Acara</button><button onClick={() => scrollTo("gallery")}>Galeri</button><button onClick={() => scrollTo("rsvp")}>RSVP</button>
         </nav>
-        <button className={playing ? "music-toggle playing" : "music-toggle"} onClick={() => { setPlaying(!playing); toast.info(playing ? "Musik dijeda" : "Musik dinyalakan"); }} aria-label="Toggle musik"><Music2 size={17} /></button>
+        <button className={playing ? "music-toggle playing" : "music-toggle"} onClick={toggleMusic} aria-label={playing ? "Jeda musik" : "Putar musik"} title={playing ? "Jeda musik" : "Putar musik"}><Music2 size={17} /><span className="music-pulse" /></button>
       </header>
 
       <main id="home">
@@ -83,7 +87,7 @@ export default function Home() {
 
         <section className="gallery-section section-pad" id="gallery" data-reveal><div className="section-kicker">03 — Little details</div><div className="gallery-heading"><h2>A day to<br /><em>remember.</em></h2><p>Potongan kecil dari hari yang akan kami simpan selamanya.</p></div><div className="gallery-grid">{gallery.map((item, i) => <figure key={item.src} className={`gallery-item gallery-${i + 1}`}><img src={item.src} alt={item.alt} /><figcaption>0{i + 1} / {item.alt}</figcaption></figure>)}</div></section>
 
-        <section className="rsvp-section section-pad" id="rsvp" data-reveal><div className="rsvp-card"><div className="section-kicker">04 — Be with us</div><h2>Titipkan<br /><em>doa untuk kami.</em></h2><p>Mohon konfirmasi kehadiran Anda sebelum 31 Januari 2027.</p><form onSubmit={(e) => { e.preventDefault(); const form = e.currentTarget; const data = new FormData(form); const message = String(data.get("message") || "").trim(); const name = String(data.get("name") || guestName).trim() || guestName; const attending = String(data.get("attending") || ""); if (message) setWishes((current) => [{ name, message, attending, createdAt: Date.now() }, ...current].slice(0, 30)); form.reset(); toast.success("Terima kasih, konfirmasi dan ucapan Anda sudah tercatat."); }}><label>Nama lengkap<input name="name" required placeholder="Tulis nama Anda" /></label><label>Konfirmasi kehadiran<select name="attending" required defaultValue=""><option value="" disabled>Pilih jawaban</option><option>Dengan senang hati, hadir</option><option>Maaf, belum dapat hadir</option></select></label><label>Pesan untuk kami<textarea name="message" required placeholder="Doa dan ucapan baik Anda..." rows={3} /></label><button className="button button-dark" type="submit">Kirim konfirmasi <Send size={15} /></button></form>{wishes.length > 0 && <div className="wishes-wrap"><div className="wishes-heading"><span>Ucapan untuk kami</span><small>{wishes.length} ucapan</small></div><div className="wishes-list">{wishes.map((wish) => <article className="wish-item" key={wish.createdAt}><div className="wish-avatar">{wish.name.charAt(0).toUpperCase()}</div><div><strong>{wish.name}</strong><p>{wish.message}</p><small>{wish.attending === "Dengan senang hati, hadir" ? "Akan hadir" : "Mengirim doa dari jauh"}</small></div></article>)}</div></div>}</div></section>
+        <section className="rsvp-section section-pad" id="rsvp" data-reveal><div className="rsvp-card"><div className="section-kicker">04 — Be with us</div><h2>Titipkan<br /><em>doa untuk kami.</em></h2><p>Mohon konfirmasi kehadiran Anda sebelum 31 Januari 2027.</p><form onSubmit={(e) => { e.preventDefault(); const form = e.currentTarget; const data = new FormData(form); const message = String(data.get("message") || "").trim(); const name = String(data.get("name") || "").trim(); const attending = String(data.get("attending") || ""); if (!name || !attending || !message) { toast.error("Nama, kehadiran, dan ucapan wajib diisi."); return; } if (message.length > 200) { toast.error("Ucapan maksimal 200 karakter."); return; } setWishes((current) => [{ name, message, attending, createdAt: Date.now() }, ...current].slice(0, 30)); form.reset(); setMessageLength(0); toast.success("Terima kasih, konfirmasi dan ucapan Anda sudah tercatat."); }}><label>Nama lengkap<input name="name" required placeholder="Tulis nama Anda" /></label><label>Konfirmasi kehadiran<select name="attending" required defaultValue=""><option value="" disabled>Pilih jawaban</option><option>Dengan senang hati, hadir</option><option>Maaf, belum dapat hadir</option></select></label><label>Pesan untuk kami<textarea name="message" required maxLength={200} placeholder="Doa dan ucapan baik Anda..." rows={3} onChange={(e) => setMessageLength(e.target.value.length)} aria-describedby="message-count" /><span className={messageLength >= 190 ? "message-count near-limit" : "message-count"} id="message-count">{messageLength} / 200 karakter</span></label><button className="button button-dark" type="submit">Kirim konfirmasi <Send size={15} /></button></form>{wishes.length > 0 && <div className="wishes-wrap"><div className="wishes-heading"><span>Ucapan untuk kami</span><small>{wishes.length} ucapan</small></div><div className="wishes-list">{wishes.map((wish) => <article className="wish-item" key={wish.createdAt}><div className="wish-avatar">{wish.name.charAt(0).toUpperCase()}</div><div><strong>{wish.name}</strong><p>{wish.message}</p><small>{wish.attending === "Dengan senang hati, hadir" ? "Akan hadir" : "Mengirim doa dari jauh"}</small></div></article>)}</div></div>}</div></section>
 
         <section className="gift-section section-pad" data-reveal><div className="gift-copy"><div className="section-kicker">05 — A little gift</div><h2>Doa Anda<br /><em>adalah hadiah.</em></h2><p>Bagi yang berkenan berbagi tanda kasih, dapat melalui rekening berikut.</p></div><div className="gift-account"><div><p className="eyebrow">Bank Central Asia</p><strong>1234 5678 90</strong><p>a.n. Adinda Putri</p></div><button onClick={copyAccount} aria-label="Salin nomor rekening">{copied ? <Check size={17} /> : <Copy size={17} />}</button></div></section>
       </main>
