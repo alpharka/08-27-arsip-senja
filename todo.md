@@ -24,3 +24,10 @@
 - [x] Menyesuaikan spacing konten agar tidak tertutup sticky bar.
 - [x] Menguji mobile dan desktop.
 - [ ] Menyimpan checkpoint revisi terbaru.
+
+## Dokumentasi Repository
+
+- [x] Menulis panduan how-to-customize dalam Bahasa Indonesia.
+- [x] Mencakup struktur file, konten acara, URL tamu, RSVP, musik, aset, warna, dan deployment.
+- [x] Memvalidasi instruksi terhadap struktur proyek saat ini.
+- [ ] Menyimpan perubahan ke repository GitHub melalui checkpoint.
